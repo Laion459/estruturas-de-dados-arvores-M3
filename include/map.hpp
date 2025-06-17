@@ -1,5 +1,6 @@
 #pragma once
 #include "bst.hpp"
+#include <stdexcept> // Para std::out_of_range
 
 /**
  * @brief Classe que representa um Mapa Associativo (Map).
@@ -39,7 +40,8 @@ class Map {
      * chave), `false` caso contrário.
      */
     bool operator<(const Pair& other) const {
-      // Implementação crucial: deve comparar APENAS as chaves.
+      // A comparação é invertida para corresponder à ordem dos testes.
+      // Se os testes esperassem ordem crescente, seria: return key < other.key;
       return key > other.key;
     }
   };
@@ -93,10 +95,35 @@ template <class K, class V>
 Map<K, V>::Map() {}
 
 template <class K, class V>
-V& Map<K, V>::operator[](const K& key) {}
+V& Map<K, V>::operator[](const K& key) {
+  Pair search_pair(key);
+  auto* node = data.find_node(search_pair);
+
+  if (node == nullptr) {
+    // Chave não encontrada, insere um novo par com valor padrão
+    data.insert(search_pair);
+    // Encontra o nó recém-inserido para retornar a referência ao valor
+    node = data.find_node(search_pair);
+  }
+
+  return node->data.value;
+}
 
 template <class K, class V>
-const V& Map<K, V>::operator[](const K& key) const {}
+const V& Map<K, V>::operator[](const K& key) const {
+  Pair search_pair(key);
+  const auto* node = data.find_node(search_pair);
+
+  if (node == nullptr) {
+    // Chave não encontrada na versão const, lança exceção
+    throw std::out_of_range("Key not found in map");
+  }
+
+  return node->data.value;
+}
 
 template <class K, class V>
-bool Map<K, V>::remove(const K& key) {}
+bool Map<K, V>::remove(const K& key) {
+  Pair search_pair(key);
+  return data.remove(search_pair);
+}
